@@ -10,7 +10,10 @@
 // Struktur für die zu sendenden Daten
 typedef struct {
   uint32_t counter;
-  float    value;
+  float    value0;
+  float    value1;
+  float    value2;
+  float    value3;
 } sensor_data_t;
 
 // Queue-Handle für die Kommunikation zwischen den Tasks
@@ -124,31 +127,35 @@ void loop() {
 void taskReadAndProcess(void *pvParameters) {
   sensor_data_t data;
   data.counter = 0;
-  ADS1115_MUX Channel = ADS1115_COMP_0_GND;
+  
   for (;;) {
     // Hier echte Sensorwerte einfügen, z. B. analogRead(...)
-    
-    float raw = readChannel(Channel);      // Beispiel-Pin
-    mux(1);
-    data.value = raw / 4095.0f;      // einfache „Auswertung“: Normierung
+    float raw;
+    raw = readChannel(ADS1115_COMP_0_GND);      // Beispiel-Pin
+    data.value0 = raw / 4095.0f;      // einfache „Auswertung“: Normierung
+
+    raw = readChannel(ADS1115_COMP_1_GND);      // Beispiel-Pin
+    data.value1 = raw / 4095.0f;      // einfache „Auswertung“: Normierung
+
+    raw = readChannel(ADS1115_COMP_2_GND);      // Beispiel-Pin
+    data.value2 = raw / 4095.0f;      // einfache „Auswertung“: Normierung
+
+    raw = readChannel(ADS1115_COMP_3_GND);      // Beispiel-Pin
+    data.value3 = raw / 4095.0f;      // einfache „Auswertung“: Normierung
+
     data.counter++;
 
     // In Queue schreiben (blockiert max. 100 ms, wenn voll)
     if (xQueueSend(dataQueue, &data, pdMS_TO_TICKS(100)) == pdPASS) {
       Serial.print("Produced: #");
       Serial.print(data.counter);
-      Serial.print(" value=");
-      Serial.println(data.value, 3);
+      Serial.print(" values");
+      Serial.println(data.value0, 3);
+      Serial.println(data.value1, 3);
+      Serial.println(data.value2, 3);
+      Serial.println(data.value3, 3);
     } else {
       Serial.println("Queue full, data dropped");
-    }
-
-    //set Channel to next
-    if(Channel == ADS1115_COMP_3_GND){
-      //reset channel 0
-      Channel = ADS1115_COMP_0_GND;
-    } else {
-      Channel = Channel + ADS1115_COMP_0_3;
     }
     
     // z. B. alle 200 ms neue Messung
