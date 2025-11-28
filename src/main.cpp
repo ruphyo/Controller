@@ -123,6 +123,16 @@ void loop() {
   // leer – FreeRTOS kümmert sich um die Tasks
 }
 
+//read channel ADS1115
+float readChannel(ADS1115_MUX channel) {
+  float voltage = 0.0;
+  adc.setCompareChannels(channel);
+  adc.startSingleMeasurement();
+  while(adc.isBusy()){}
+  voltage = adc.getResult_V(); // alternative: getResult_mV for Millivolt
+  return voltage;
+}
+
 // Task 1: Daten lesen und auswerten
 void taskReadAndProcess(void *pvParameters) {
   sensor_data_t data;
@@ -179,19 +189,10 @@ void taskSendESPNow(void *pvParameters) {
       Serial.print("Sending #");
       Serial.print(rxData.counter);
       Serial.print(" value=");
-      Serial.print(rxData.value, 3);
+      Serial.print(rxData.value0, 3);
       Serial.print(" -> ");
       Serial.println(result == ESP_OK ? "OK" : "ERROR");
     }
   }
 }
 
-//read channel ADS1115
-float readChannel(ADS1115_MUX channel) {
-  float voltage = 0.0;
-  adc.setCompareChannels(channel);
-  adc.startSingleMeasurement();
-  while(adc.isBusy()){}
-  voltage = adc.getResult_V(); // alternative: getResult_mV for Millivolt
-  return voltage;
-}
