@@ -50,11 +50,11 @@ void setup() {
   // ESP-NOW initialisieren
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");
-    while (true) {         
+    while (true) {
         digitalWrite(LED, HIGH);
-        delay(1000); 
+        delay(1000);
         digitalWrite(LED,LOW);
-        delay(1000); 
+        delay(1000);
       }
   }
 
@@ -62,7 +62,7 @@ void setup() {
   if(!adc.init()){
     Serial.println("ADS1115 not connected!");
     digitalWrite(LED, HIGH);
-    delay(2000); 
+    delay(2000);
     digitalWrite(LED,LOW);
     delay(2000);
   }
@@ -90,7 +90,7 @@ void setup() {
   }
 
   // Queue erstellen (z. B. 10 Elemente)
-  dataQueue = xQueueCreate(10, sizeof(sensor_data_t));
+  dataQueue = xQueueCreate(1, sizeof(sensor_data_t));
   if (dataQueue == NULL) {
     Serial.println("Error creating queue");
     while (true) { delay(1000); }
@@ -165,7 +165,8 @@ void taskReadAndProcess(void *pvParameters) {
       Serial.println(data.value2, 3);
       Serial.println(data.value3, 3);
     } else {
-      Serial.println("Queue full, data dropped");
+      xQueueOverwrite(dataQueue, &data);
+      Serial.println("Queue full, data overwritten");
     }
     
     // z. B. alle 200 ms neue Messung
